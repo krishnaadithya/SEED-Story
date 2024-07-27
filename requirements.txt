@@ -55,6 +55,7 @@ Werkzeug==3.0.1
 wheel==0.41.2
 xformers==0.0.23.post1
 zipp==3.18.1
-hydra
 pyrootutils
 torchdata
+transformers_stream_generator
+einops
