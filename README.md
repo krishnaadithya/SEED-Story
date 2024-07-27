@@ -77,6 +77,21 @@ the StoryStream instruction-tuned MLLM **SEED-Story-George**, and the StoryStrea
 Please download the checkpoints and save them under the folder `./pretrained`.
 
 You also need to download [stable-diffusion-xl-base-1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0), [Llama-2-7b-hf](https://huggingface.co/meta-llama/Llama-2-7b-hf) and [Qwen-VL-Chat](https://huggingface.co/Qwen/Qwen-VL-Chat), and save them under the folder `./pretrained`. Please use the following script to extract the weights of visual encoder in Qwen-VL-Chat.
+
+```bash
+!git lfs install
+%cd SEED-Story
+!git clone https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
+!mkdir pretrained
+!mv stable-diffusion-xl-base-1.0 ./pretrained 
+!git clone https://huggingface.co/Qwen/Qwen-VL-Chat
+!mv Qwen-VL-Chat ./pretrained
+!git clone https://huggingface.co/TencentARC/SEED-Story
+!mv SEED-Story ./pretrained
+!git clone https://krishnavadithya:<hf_token>@huggingface.co/meta-llama/Llama-2-7b-hf
+!mv Llama-2-7b-hf ./pretrained
+```
+
 ```bash
 python3 src/tools/reload_qwen_vit.py
 ```
