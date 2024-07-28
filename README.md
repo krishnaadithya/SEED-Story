@@ -58,11 +58,16 @@ Clone the repo and install dependent packages
   ```bash
   git clone 
   cd SEED-Story
+  pip install --ignore-installed blinker
   pip install -r requirements.txt
   ```
 
 ### Data Preparation
 We release the StoryStream dataset for training and testing multimodal story generation. Download the images and story text files in [StoryStream](https://huggingface.co/datasets/TencentARC/StoryStream).
+
+```bash
+git clone https://huggingface.co/datasets/TencentARC/StoryStream
+```
 
 The StoryStream dataset consists of 3 subsets, Curious George, Rabbids Invasion, and The Land Before Time. We take the George subset as an example. 
 
@@ -84,7 +89,8 @@ You also need to download [stable-diffusion-xl-base-1.0](https://huggingface.co/
 mkdir pretrained
 cd pretrained
 git clone https://huggingface.co/Qwen/Qwen-VL-Chat
-git clone https://huggingface.co/TencentARC/SEED-Story
+git clone https://huggingface.co/TencentARC/SEED-Story ./
+mv SEED
 ```
 
 ```bash
@@ -98,13 +104,12 @@ git clone https://krishnavadithya:<hf_token>@huggingface.co/meta-llama/Llama-2-7
 
 ## clone the app code 
 
+```bash
 git clone https://huggingface.co/spaces/TencentARC/SEED-Story
+```
 
 this has the missing folders like cvlm_llama2_tokenizer, which need to be moved to pretrained folder
 
-## dataset:
-
-git clone https://huggingface.co/dataset/TencentARC/SEED-Story
 
 
 ### Inference
