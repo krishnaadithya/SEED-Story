@@ -81,19 +81,19 @@ You also need to download [stable-diffusion-xl-base-1.0](https://huggingface.co/
 ```bash
 !sudo apt-get install git-lfs
 %cd SEED-Story
-!git clone https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
-!mkdir pretrained
-!mv stable-diffusion-xl-base-1.0 ./pretrained 
-!git clone https://huggingface.co/Qwen/Qwen-VL-Chat
-!mv Qwen-VL-Chat ./pretrained
-!git clone https://huggingface.co/TencentARC/SEED-Story
-!mv SEED-Story ./pretrained
-!git clone https://krishnavadithya:<hf_token>@huggingface.co/meta-llama/Llama-2-7b-hf
-!mv Llama-2-7b-hf ./pretrained
+mkdir pretrained
+cd pretrained
+git clone https://huggingface.co/Qwen/Qwen-VL-Chat
+git clone https://huggingface.co/TencentARC/SEED-Story
 ```
 
 ```bash
 python3 src/tools/reload_qwen_vit.py
+```
+
+```bash
+git clone https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
+git clone https://krishnavadithya:<hf_token>@huggingface.co/meta-llama/Llama-2-7b-hf
 ```
 
 ## clone the app code 
@@ -105,8 +105,6 @@ this has the missing folders like cvlm_llama2_tokenizer, which need to be moved 
 ## dataset:
 
 git clone https://huggingface.co/dataset/TencentARC/SEED-Story
-
-
 
 
 ### Inference
