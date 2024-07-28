@@ -79,7 +79,7 @@ Please download the checkpoints and save them under the folder `./pretrained`.
 You also need to download [stable-diffusion-xl-base-1.0](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0), [Llama-2-7b-hf](https://huggingface.co/meta-llama/Llama-2-7b-hf) and [Qwen-VL-Chat](https://huggingface.co/Qwen/Qwen-VL-Chat), and save them under the folder `./pretrained`. Please use the following script to extract the weights of visual encoder in Qwen-VL-Chat.
 
 ```bash
-!git lfs install
+!sudo apt-get install git-lfs
 %cd SEED-Story
 !git clone https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0
 !mkdir pretrained
@@ -95,6 +95,19 @@ You also need to download [stable-diffusion-xl-base-1.0](https://huggingface.co/
 ```bash
 python3 src/tools/reload_qwen_vit.py
 ```
+
+## clone the app code 
+
+git clone https://huggingface.co/spaces/TencentARC/SEED-Story
+
+this has the missing folders like cvlm_llama2_tokenizer, which need to be moved to pretrained folder
+
+## dataset:
+
+git clone https://huggingface.co/dataset/TencentARC/SEED-Story
+
+
+
 
 ### Inference
 #### Inference with SEED-Story
