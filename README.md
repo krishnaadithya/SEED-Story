@@ -60,6 +60,12 @@ Clone the repo and install dependent packages
   cd SEED-Story
   pip install --ignore-installed blinker
   pip install -r requirements.txt
+  !pip install --ignore-installed blinker
+!pip install FPDF
+!pip install moviepy
+!pip install gtts
+!pip install ImageMagick
+!pip install mutagen
   ```
 
 ### Data Preparation
@@ -90,7 +96,6 @@ mkdir pretrained
 cd pretrained
 git clone https://huggingface.co/Qwen/Qwen-VL-Chat
 git clone https://huggingface.co/TencentARC/SEED-Story ./
-mv SEED
 ```
 
 ```bash
