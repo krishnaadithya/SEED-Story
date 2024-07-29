@@ -412,7 +412,6 @@ def prev_image(images, index):
     new_index = (index - 1) % len(images)
     return images[new_index], new_index
 
-
 with gr.Blocks() as demo:
     with gr.Row():
         image_input = gr.Image(type="filepath", label="Image Path")
@@ -421,6 +420,11 @@ with gr.Blocks() as demo:
     generate_button = gr.Button("Generate Comic")
 
     image_output = gr.Image(label="Generated Image", elem_id="image_output", height=2000)
+    
+    with gr.Row():
+        prev_button = gr.Button("Previous")
+        next_button = gr.Button("Next")
+
     pdf_output = gr.File(label="Generated PDF")
     video_output = gr.Video(label="Generated Video")
     index = gr.State(0)
@@ -436,10 +440,6 @@ with gr.Blocks() as demo:
         outputs=[image_output, index]
     )
 
-    with gr.Row():
-        prev_button = gr.Button("Previous")
-        next_button = gr.Button("Next")
-
     prev_button.click(
         prev_image,
         inputs=[generated_images, index],
@@ -451,8 +451,5 @@ with gr.Blocks() as demo:
         inputs=[generated_images, index],
         outputs=[image_output, index]
     )
-
-    gr.Row().style(margin_top=10).append(prev_button, next_button)
-
 
 demo.queue().launch(share=True)
