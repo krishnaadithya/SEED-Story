@@ -452,5 +452,7 @@ with gr.Blocks() as demo:
         outputs=[image_output, index]
     )
 
+    gr.Row().style(margin_top=10).append(prev_button, next_button)
+
 
 demo.queue().launch(share=True)
