@@ -17,10 +17,15 @@ import gradio as gr
 from PIL import Image
 import gradio as gr
 from fpdf import FPDF
-from gtts import gTTS
+import edge_tts
+import asyncio
+import tempfile
+from TTS.api import TTS
 import numpy as np 
 
 from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips, TextClip, CompositeVideoClip
+
+
 
 
 
