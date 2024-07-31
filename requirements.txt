@@ -59,3 +59,8 @@ pyrootutils
 torchdata
 transformers_stream_generator
 einops
+TTS
+edge-tts
+gradio
+FPDF
+moviepy
