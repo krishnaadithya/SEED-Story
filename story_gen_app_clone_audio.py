@@ -16,12 +16,13 @@ import os
 import gradio as gr
 from PIL import Image
 import gradio as gr
-from fpdf import FPDF
 import edge_tts
 import asyncio
 import tempfile
 from TTS.api import TTS
 import numpy as np 
+
+import sys
 
 from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips, TextClip, CompositeVideoClip
 os.environ["COQUI_TOS_AGREED"] = "1"
@@ -30,6 +31,10 @@ BOI_TOKEN = '<img>'
 EOI_TOKEN = '</img>'
 IMG_TOKEN = '<img_{:05d}>'
 
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(project_root)
+
+device = 'cuda:0'
 dtype = torch.float16
 dtype_str = 'fp16'
 num_img_in_tokens = 64
@@ -99,6 +104,7 @@ eoi_token_id = tokenizer.encode(EOI_TOKEN, add_special_tokens=False)[0]
 
 tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
 
+os.makedirs("tmp/", exist_ok = True)
 
 def read_jsonl_to_dict(filename):
     data = []
@@ -109,9 +115,44 @@ def read_jsonl_to_dict(filename):
             data.append(json_object)
     return data
 
+"""
+def draw_text_on_image(image, text, font_size=20, max_width=30):
+    draw = ImageDraw.Draw(image)
+    width, height = image.size
+
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
+    except IOError:
+        font = ImageFont.load_default()
+
+    wrapped_text = textwrap.fill(text, width=max_width)
+    lines = wrapped_text.split('\n')
+
+    line_heights = [font.getbbox(line)[3] - font.getbbox(line)[1] for line in lines]
+    total_text_height = sum(line_heights)
+
+    padding = 10
+    y = height - total_text_height - padding
+
+    # Draw a semi-transparent rectangle for the entire text area
+    rectangle_position = (0, y - padding, width, height)
+    draw.rectangle(rectangle_position, fill=(0, 0, 0, 128))  # Semi-transparent black
+
+    for line in lines:
+        # Get line width
+        bbox = font.getbbox(line)
+        line_width = bbox[2] - bbox[0]
+
+        # Calculate x position to center this line
+        x = (width - line_width) // 2
+
+        # Draw the text
+        draw.text((x, y), line, font=font, fill="white")
+
+        # Move to the next line
+        y += line_heights[lines.index(line)]
 
 def create_comic_page(images, texts, images_per_row=4, font_path=None, font_size=100, spacing=50):
-    """ Create a single comic page with images and captions styled to be more visually appealing """
     
     width, height = 512, 512  # Fixed image size
     text_height = 60  # Height reserved for text
@@ -137,7 +178,6 @@ def create_comic_page(images, texts, images_per_row=4, font_path=None, font_size
     return grid_image
 
 def create_comic(images, texts, images_per_page=6, images_per_row=3, font_path=None, font_size=20, spacing=20):
-    """ Create multiple comic pages from lists of images and texts """
     pages = []
     for i in range(0, len(images), images_per_page):
         page_images = images[i:i + images_per_page]
@@ -145,6 +185,110 @@ def create_comic(images, texts, images_per_page=6, images_per_row=3, font_path=N
         comic_page = create_comic_page(page_images, page_texts, images_per_row, font_path, font_size, spacing)
         pages.append(comic_page)
     return pages
+
+"""
+def draw_text_on_image(picture, words, bubble_size=40, max_width=25):
+    """
+    Adds a fun speech bubble with words to a picture!
+    """
+    magic_pen = ImageDraw.Draw(picture)
+    picture_width, picture_height = picture.size
+
+    try:
+        # Let's use a fun font!
+        bubble_font = ImageFont.truetype("Comic_Sans_MS.ttf", bubble_size)
+    except IOError:
+        # Oops! If we can't find the fun font, we'll use the default one
+        bubble_font = ImageFont.load_default()
+
+    # Wrap the words so they fit nicely in the bubble
+    wrapped_words = textwrap.fill(words, width=max_width)
+    word_lines = wrapped_words.split('\n')
+
+    # Figure out how tall our bubble needs to be
+    line_heights = [bubble_font.getbbox(line)[3] - bubble_font.getbbox(line)[1] for line in word_lines]
+    bubble_height = sum(line_heights)
+
+    # Let's put the bubble at the bottom of the picture
+    bubble_padding = 20
+    y_position = picture_height - bubble_height - bubble_padding
+
+    # Draw a see-through rectangle for our speech bubble
+    bubble_shape = (0, y_position - bubble_padding, picture_width, picture_height)
+    magic_pen.rectangle(bubble_shape, fill=(255, 255, 255, 200))  # Light, see-through white
+
+    for line in word_lines:
+        # Center each line of words in the bubble
+        line_width = bubble_font.getbbox(line)[2] - bubble_font.getbbox(line)[0]
+        x_position = (picture_width - line_width) // 2
+
+        # Write the words in a fun color!
+        magic_pen.text((x_position, y_position), line, font=bubble_font, fill="purple")
+
+        # Move down for the next line
+        y_position += line_heights[word_lines.index(line)]
+
+def create_comic_page(pictures, captions, pictures_per_row=2, rows_per_page=3, font_path=None, font_size=50, space_between=40):
+    """
+    Creates a colorful comic page with pictures and captions!
+    """
+    picture_width, picture_height = 512, 512  # Each picture is this big
+    caption_height = 120  # Space for captions
+    border_size = 10  # Border around image and text
+    total_pictures = len(pictures)
+    
+    # Calculate the height and width of the comic page
+    page_width = pictures_per_row * (picture_width + space_between + 2 * border_size) - space_between
+    page_height = rows_per_page * (picture_height + caption_height + space_between + 2 * border_size) - space_between
+
+    # Create a big colorful canvas for our comic
+    comic_canvas = Image.new('RGB', (page_width, page_height), 'lightblue')
+    magic_pen = ImageDraw.Draw(comic_canvas)
+    
+    # Let's use a fun font for our captions!
+    caption_font = ImageFont.truetype(font_path, font_size) if font_path else ImageFont.load_default(size=font_size)
+
+    # Let's add our pictures and captions to the comic!
+    for i, (pic, caption) in enumerate(zip(pictures, captions)):
+        pic = pic.resize((picture_width, picture_height))
+        x = (i % pictures_per_row) * (picture_width + space_between + 2 * border_size) + border_size
+        y = (i // pictures_per_row) * (picture_height + caption_height + space_between + 2 * border_size) + border_size
+
+        # Draw a black border around the picture and caption
+        magic_pen.rectangle([x - border_size, y - border_size, x + picture_width + border_size, y + picture_height + caption_height + border_size], outline='black', width=2)
+        comic_canvas.paste(pic, (x, y))
+
+        # Wrap the caption text so it fits nicely
+        wrapped_caption = textwrap.fill(caption, width=50)  # Adjust this number to make the text fit just right
+        caption_y = y + picture_height + 10  # A little space between the picture and caption
+        
+        # Let's write our caption in a fun color!
+        line_width = magic_pen.textbbox((0, 0), wrapped_caption, font=caption_font)[2]
+        centered_x = x + (picture_width - line_width) // 2
+        magic_pen.multiline_text((centered_x, caption_y), wrapped_caption, font=caption_font, fill="blue", align='center', spacing=4)
+
+    return comic_canvas
+
+def create_comic(pictures, captions, images_per_page=6, images_per_row=2, rows_per_page=3, font_path=None, font_size=50, spacing=40):
+    """
+    Creates a whole comic book with multiple pages!
+    """
+    comic_pages = []
+    for i in range(0, len(pictures), images_per_page):
+        page_pictures = pictures[i:i + images_per_page]
+        page_captions = captions[i:i + images_per_page]
+
+        # Fill the remaining spots on the last page with blank images and empty captions
+        while len(page_pictures) < images_per_page:
+            blank_image = Image.new('RGB', (512, 512), 'white')
+            page_pictures.append(blank_image)
+            page_captions.append("")
+
+        fun_comic_page = create_comic_page(page_pictures, page_captions, images_per_row, rows_per_page, font_path, font_size, spacing)
+        comic_pages.append(fun_comic_page)
+    
+    return comic_pages
+
 
 def gen_image(output):
     image_embeds_gen = output['img_gen_feat']
@@ -243,55 +387,14 @@ def main(image_path, question, story_len = 8, window_size = 8, text_id = 1):
     return generated_images, output_texts
 
 
-def images_to_pdf(images):
-    pdf = FPDF()
-    for image in images:
-        image_path = "tmp/temp_image.jpg"
-        image.save(image_path)
-        pdf.add_page()
-        pdf.image(image_path, x=10, y=10, w=180)
-    pdf_path = "tmp/comic.pdf"
-    pdf.output(pdf_path)
-    return pdf_path
+def images_to_pdf(comic_pages, output_path = "tmp/comic.pdf"):
+    """
+    Saves the comic pages as a PDF file.
+    """
+    if comic_pages:
+        comic_pages[0].save(output_path, save_all=True, append_images=comic_pages[1:], format='PDF')
 
-def draw_text_on_image(image, text, font_size=20, max_width=30):
-    draw = ImageDraw.Draw(image)
-    width, height = image.size
 
-    try:
-        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", font_size)
-    except IOError:
-        font = ImageFont.load_default()
-
-    # Wrap text
-    wrapped_text = textwrap.fill(text, width=max_width)
-    lines = wrapped_text.split('\n')
-
-    # Calculate total text height
-    line_heights = [font.getbbox(line)[3] - font.getbbox(line)[1] for line in lines]
-    total_text_height = sum(line_heights)
-
-    # Calculate starting Y position to place text at the bottom
-    padding = 10
-    y = height - total_text_height - padding
-
-    # Draw a semi-transparent rectangle for the entire text area
-    rectangle_position = (0, y - padding, width, height)
-    draw.rectangle(rectangle_position, fill=(0, 0, 0, 128))  # Semi-transparent black
-
-    for line in lines:
-        # Get line width
-        bbox = font.getbbox(line)
-        line_width = bbox[2] - bbox[0]
-
-        # Calculate x position to center this line
-        x = (width - line_width) // 2
-
-        # Draw the text
-        draw.text((x, y), line, font=font, fill="white")
-
-        # Move to the next line
-        y += line_heights[lines.index(line)]
 
 async def get_voices():
     voices = await edge_tts.list_voices()
@@ -314,7 +417,7 @@ async def text_to_speech_edge(text, voice, rate=-10, pitch=0):
 
 def clone(text, audio):
     tts.tts_to_file(text=text, speaker_wav=audio, language="en", file_path="tmp/output.wav")
-    return "./output.wav"
+    return "tmp/output.wav"
 
 def process_input(text, audio_input, voice):
     if audio_input:
@@ -371,7 +474,7 @@ def app(image_path, question):
     
     generated_images, output_texts = main(image_path, question, story_len=8, window_size=8, text_id=1)
     
-    comic_pages = create_comic(generated_images, output_texts, images_per_page=6, images_per_row=2, font_path=font_path, font_size=20, spacing=30)
+    comic_pages = create_comic(generated_images, output_texts, images_per_row=2, font_path=font_path, font_size=20, spacing=30)
     pdf_path = images_to_pdf(comic_pages)
     
     return [comic.convert("RGB") for comic in comic_pages], pdf_path, generated_images, output_texts
@@ -417,26 +520,27 @@ async def create_demo():
         index = gr.State(0)
         generated_images = gr.State([])
         output_texts = gr.State([])
+        comic_pages = gr.State([])
         
         generate_button.click(
             app,
             inputs=[image_input, scenario_input],
-            outputs=[generated_images, pdf_output, generated_images, output_texts]
+            outputs=[comic_pages, pdf_output, generated_images, output_texts]
         ).then(
             show_image,
-            inputs=[generated_images, index],
+            inputs=[comic_pages, index],
             outputs=[image_output, index]
         )
         
         prev_button.click(
             prev_image,
-            inputs=[generated_images, index],
+            inputs=[comic_pages, index],
             outputs=[image_output, index]
         )
         
         next_button.click(
             next_image,
-            inputs=[generated_images, index],
+            inputs=[comic_pages, index],
             outputs=[image_output, index]
         )
         
