@@ -394,6 +394,8 @@ def images_to_pdf(comic_pages, output_path = "tmp/comic.pdf"):
     if comic_pages:
         comic_pages[0].save(output_path, save_all=True, append_images=comic_pages[1:], format='PDF')
 
+    return output_path
+
 
 
 async def get_voices():
@@ -469,10 +471,10 @@ def create_video(images, audio_paths, fps=24):
     
     return video_path
 
-def app(image_path, question):
+def app(image_path, question, story_len):
     font_path = None
     
-    generated_images, output_texts = main(image_path, question, story_len=8, window_size=8, text_id=1)
+    generated_images, output_texts = main(image_path, question, story_len=story_len, window_size=8, text_id=1)
     
     comic_pages = create_comic(generated_images, output_texts, images_per_row=2, font_path=font_path, font_size=20, spacing=30)
     pdf_path = images_to_pdf(comic_pages)
@@ -492,27 +494,96 @@ def prev_image(images, index):
     new_index = (index - 1) % len(images)
     return images[new_index], new_index
 
+def generate_audio_for_texts(texts, audio_input, voice):
+    audio_paths = []
+    for text in texts:
+        audio_path = process_input(text, audio_input, voice)
+        audio_paths.append(audio_path)
+    return audio_paths
+        
+def generate_video_wrapper(images, texts, audio_input, voice):
+    audio_paths = generate_audio_for_texts(texts, audio_input, voice)
+    video_path = create_video(images, audio_paths)
+    return video_path
+    
 async def create_demo():
     voices = await get_voices()
     
     with gr.Blocks() as demo:
+
+        markdown_content = markdown_content = """
+# Curious George Adventure Creator: AI Comic Book Generator
+
+Welcome to the future of storytelling with the Curious George Adventure Creator! Dive into the playful and adventurous world of Curious George like never before. Our innovative AI model, designed for children and fans of the lovable monkey, brings George's stories to life with just a starting image and a chosen theme.
+
+The Curious George Adventure Creator allows you to craft unique episodes featuring the sweet and curious African monkey, Curious George, and his ever-patient friend, "The Man in the Yellow Hat." George's adventures, often filled with playful curiosity and unforeseen trouble, are brought to life through our cutting-edge AI technology.
+
+### Key Features
+
+1. **Easy Episode Creation**: Simply upload a starting image and select a theme, and our AI model will generate a personalized Curious George episode. Watch George explore, learn, and get into his usual delightful mishaps, all tailored to your input.
+   
+2. **Learning and Fun**: Each episode emphasizes themes of learning, forgiveness, and curiosity. It's not just entertainment; it's an educational experience wrapped in fun and adventure.
+
+3. **Voice Options**:
+   - **Loan Your Voice**: Bring a personal touch to your episode by lending your own voice to the characters.
+   - **Audio Library**: Choose from a variety of pre-recorded voices, including cloned voices that perfectly match the characters.
+"""
+
+        logo_path = "asset/logo.png"
+        
         with gr.Row():
-            image_input = gr.Image(type="filepath", label="Image Path")
-            scenario_input = gr.Textbox(label="Enter your scenario:")
+            with gr.Column(scale=1):
+                gr.Image(logo_path)
+            with gr.Column(scale=2):
+                gr.Markdown(markdown_content)
         
-        generate_button = gr.Button("Generate Comic")
         
-        image_output = gr.Image(label="Generated Image", elem_id="image_output", height=2000)
+
+        # Input Section
+        with gr.Row():
+            with gr.Column(scale=1):
+                gr.Markdown("### Upload your starting image")
+                gr.Markdown("This could be anything like farmland, forest, or sea.")
+                image_input = gr.Image(type="filepath", label="Upload Image", elem_id="image_input")
+                
+                gr.Markdown("### Write a scenario")
+                gr.Markdown('Example: "George the monkey goes to a farm and explores."')
+                scenario_input = gr.Textbox(label="Enter your scenario:", elem_id="scenario_input")
+
+                story_len = gr.Slider(2, 10, value=8, step = 1, label="Count", info="Choose between 2 and 10")
+
+                
+                generate_button = gr.Button("Generate Comic", elem_id="generate_button")
+            with gr.Column(scale=2):
+                # Output Section
+                image_output = gr.Image(label="Generated Image", elem_id="image_output", height=1200)
+                with gr.Row():
+                    prev_button = gr.Button("Previous", elem_id="prev_button")
+                    next_button = gr.Button("Next", elem_id="next_button")
+
+
+        with gr.Row():
+            gr.Markdown(
+                        """
+                        **If you liked the comic, you can download it using the button below:**
+                        """
+                    )
+            pdf_output = gr.File(label="Download the Generated Story as a pdf")
+
+
+        # Voice-over Section
+        gr.Markdown(
+            """
+            ## Voice-over Options
+            You can add a personalized touch to your comic by generating a voice-over. You have two options:
+            - **Voice Reference Audio File:** Upload an audio file of your voice to clone it.
+            - **Select Voice:** Choose from a variety of pre-recorded voices available in our system.
+            """
+        )
         
         with gr.Row():
-            prev_button = gr.Button("Previous")
-            next_button = gr.Button("Next")
-        
-        pdf_output = gr.File(label="Generated PDF")
-        
-        with gr.Row():
-            audio_input = gr.Audio(type="filepath", label="Voice reference audio file (optional)")
-            voice = gr.Dropdown(choices=[""] + list(voices.keys()), label="Select Voice (for Edge TTS)", value="")
+            audio_input = gr.Audio(type="filepath", label="Clone your voice by clicking the record buttong/upload a reference voice")
+            voice = gr.Dropdown(choices=[""] + list(voices.keys()), label="Select Voice", value="")
         
         generate_video_button = gr.Button("Generate Video")
         video_output = gr.Video(label="Generated Video")
@@ -524,7 +595,7 @@ async def create_demo():
         
         generate_button.click(
             app,
-            inputs=[image_input, scenario_input],
+            inputs=[image_input, scenario_input, story_len],
             outputs=[comic_pages, pdf_output, generated_images, output_texts]
         ).then(
             show_image,
@@ -543,18 +614,6 @@ async def create_demo():
             inputs=[comic_pages, index],
             outputs=[image_output, index]
         )
-        
-        def generate_audio_for_texts(texts, audio_input, voice):
-            audio_paths = []
-            for text in texts:
-                audio_path = process_input(text, audio_input, voice)
-                audio_paths.append(audio_path)
-            return audio_paths
-        
-        def generate_video_wrapper(images, texts, audio_input, voice):
-            audio_paths = generate_audio_for_texts(texts, audio_input, voice)
-            video_path = create_video(images, audio_paths)
-            return video_path
         
         generate_video_button.click(
             generate_video_wrapper,
