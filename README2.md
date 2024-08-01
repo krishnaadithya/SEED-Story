@@ -6,7 +6,7 @@ Welcome to the future of storytelling with the Curious George Adventure Creator!
 
 ## Video Demo
 
-<a href="https://youtu.be/_t87U1tLiyQ"><img src="asset/logo.png" width="300" height="300" alt="Thumbnail"></a>
+<a href="https://youtu.be/_t87U1tLiyQ"><img src="assets/logo.png" width="300" height="300" alt="Thumbnail"></a>
 
 *Here is a video demo of our App.*
 
